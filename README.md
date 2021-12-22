@@ -1,0 +1,1 @@
+EqvyPay - Money made manageable

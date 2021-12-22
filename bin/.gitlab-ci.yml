@@ -1,0 +1,47 @@
+stages:
+  - build
+  - test
+  - deploy
+
+maven-build:
+  stage: build
+  image: maven:latest
+  script:
+    - echo "Maven Build"
+    - mvn package
+  artifacts:
+    paths:
+      - target
+  tags:
+    - ugrad
+
+maven-test:
+  stage: test
+  image: maven:latest
+  script:
+    - echo "Maven Test"
+    - mvn verify
+  artifacts:
+    when: always
+    reports:
+      junit:
+        - target/surefire-reports/TEST_*.xml
+  tags:
+    - ugrad
+
+# Deployment on Timberlea server
+# Transferring the build(s) by using scp.
+# References : zip -- man zip command, scp : https://linuxize.com/post/how-to-use-scp-command-to-securely-transfer-files/
+
+
+timberlea-deploy:
+  stage: deploy
+  tags:
+    - ugrad
+  artifacts:
+    paths:
+      - target
+  script:
+    - echo "Deployment on TimberLea"
+    - chmod og-rwx ${DEPLOY_SSH_KEY}
+    - scp -r -o StrictHostKeyChecking=no -i "${DEPLOY_SSH_KEY}" target/eqvypay-1.0-SNAPSHOT.jar "${DEPLOY_USER}@${DEPLOY_HOST}:${DEPLOY_DIR}/${CI_PROJECT_NAME}-${CI_COMMIT_REF_NAME}-${CI_COMMIT_SHORT_SHA}.jar"
